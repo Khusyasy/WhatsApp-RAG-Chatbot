@@ -2,3 +2,16 @@ flask
 python-dotenv
 ngrok
 requests
+pandas
+beautifulsoup4
+markdownify
+sentence-transformers
+chromadb
+chardet
+transformers
+langchain
+langchain-chroma
+langchain-core
+langchain-community
+langchain-huggingface
+langchain_experimental
