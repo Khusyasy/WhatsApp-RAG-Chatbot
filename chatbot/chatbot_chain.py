@@ -16,7 +16,8 @@ load_dotenv()
 def create_chatbot_chain():
     pipe = pipeline(
         "text-generation",
-        model="kalisai/Nusantara-0.8b-Indo-Chat",
+        # model="kalisai/Nusantara-0.8b-Indo-Chat",
+        model="kalisai/Nusantara-1.8b-Indo-Chat",
         max_new_tokens=256,
         do_sample=True,
         temperature=0.2,
@@ -33,7 +34,7 @@ def create_chatbot_chain():
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
-            MessagesPlaceholder("chat_history"),
+            MessagesPlaceholder("chat_history", optional=True, n_messages=6),
             ("human", "{input}"),
         ]
     )

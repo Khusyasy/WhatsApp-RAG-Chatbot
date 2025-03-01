@@ -21,7 +21,7 @@ if not os.path.exists(DATA_DIR):
 def create_vector_database():
     embeddings = HuggingFaceEmbeddings(
         model_name="naufalihsan/indonesian-sbert-large",
-        # model_kwargs={"device": "cuda"},  # setting to use GPU
+        model_kwargs={"device": "cuda"},  # setting to use GPU
     )
 
     if os.path.exists(PERSIST_DIR):
@@ -62,6 +62,7 @@ def create_vector_database():
         semantic_splits = text_splitter.split_documents(md_splits)
 
         # masukin metadata ke content
+        # TODO: i think ini bikin similarity jadi ga akurat, coba ganti
         splits = []
         for split in semantic_splits:
             metadata_str = ", ".join(value for key, value in split.metadata.items())
@@ -85,7 +86,8 @@ def create_vector_database():
         print(f"Chroma all finished: {(endtime - starttime)/1_000_000_000} s")
 
     retriever = vectordb.as_retriever(
-        kwargs={"search_type": "similarity"}, search_kwargs={"k": 7}
+        search_type="similarity",
+        search_kwargs={"k": 7},
     )
     return retriever
 
