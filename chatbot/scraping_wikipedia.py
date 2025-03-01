@@ -125,6 +125,7 @@ def clean_html_content(html_content):
         ".mw-editsection",
         "figure",
         "title",
+        ".ambox",
     ]
     for selector in elements_to_remove:
         for element in soup.select(selector):
@@ -135,6 +136,12 @@ def clean_html_content(html_content):
         link.decompose()
     for a in soup.find_all("a", href=True):
         a.replace_with(a.get_text())
+
+    # hapus italic sama bold
+    for i in soup.find_all("i"):
+        i.unwrap()
+    for b in soup.find_all("b"):
+        b.unwrap()
 
     # hapus semua elemen <meta>
     for meta in soup.find_all("meta", content=True):
@@ -183,12 +190,13 @@ for index, row in df_pages.iterrows():
     cleaned_html_content = clean_html_content(content)
     # print(cleaned_html_content)
 
-    md_content = md(cleaned_html_content, heading_style="ATX")
+    md_content = md(cleaned_html_content, heading_style="ATX", bullet_style="*")
     # print(md_content)
 
-    md_content = md_content.replace(
-        "![](https://login.wikimedia.org/wiki/Special:CentralAutoLogin/start?type=1x1)",
+    md_content = re.sub(
+        r"!\[\]\(.*login.wikimedia.org.*\)",
         "",
+        md_content,
     )
     md_clean = re.sub(r"\n{3,}", "\n\n", md_content).strip()
 
