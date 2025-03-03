@@ -1,13 +1,16 @@
 import os
 import shutil
 import time
+from typing import List
 
-from langchain.text_splitter import MarkdownHeaderTextSplitter
+from langchain.text_splitter import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders.directory import DirectoryLoader
 from langchain_core.documents import Document
-from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface import HuggingFaceEmbeddings
 
 PERSIST_DIR = "db"
@@ -20,8 +23,8 @@ if not os.path.exists(DATA_DIR):
 
 def create_vector_database():
     embeddings = HuggingFaceEmbeddings(
-        model_name="naufalihsan/indonesian-sbert-large",
-        model_kwargs={"device": "cuda"},  # setting to use GPU
+        model_name="firqaaa/indo-sentence-bert-base",
+        # model_kwargs={"device": "cuda"},  # setting to use GPU
     )
 
     if os.path.exists(PERSIST_DIR):
@@ -52,29 +55,25 @@ def create_vector_database():
         markdown_splitter = MarkdownHeaderTextSplitter(
             headers_to_split_on=headers_to_split_on, strip_headers=True
         )
-        md_splits = []
+        md_splits: List[Document] = []
         for doc in documents:
             splits = markdown_splitter.split_text(doc.page_content)
             md_splits.extend(splits)
 
-        # semantic text splitter
-        text_splitter = SemanticChunker(embeddings)
-        semantic_splits = text_splitter.split_documents(md_splits)
+        # recursive text splitter
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=250,
+            chunk_overlap=50,
+            separators=["|\n", "  \n", "\n\n"],
+        )
+        rec_splits = text_splitter.split_documents(md_splits)
 
-        # masukin metadata ke content
-        # TODO: i think ini bikin similarity jadi ga akurat, coba ganti
-        splits = []
-        for split in semantic_splits:
-            metadata_str = ", ".join(value for key, value in split.metadata.items())
-            content_with_metadata = f"{metadata_str}: {split.page_content}"
-            splits.append(
-                Document(page_content=content_with_metadata, metadata=split.metadata)
-            )
+        splits = rec_splits
 
         # buat debugging aja
-        # with open("debug.txt", "w+", encoding="utf-8", errors="ignore") as d:
-        #     d.write(str(splits))
-        # print("total data split", len(splits))
+        with open("debug.txt", "w+", encoding="utf-8", errors="ignore") as d:
+            d.write(str(splits))
+        print("total data split", len(splits))
 
         vectordb = Chroma.from_documents(
             documents=splits,
