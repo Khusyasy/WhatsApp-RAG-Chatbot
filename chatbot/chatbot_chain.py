@@ -14,15 +14,17 @@ load_dotenv()
 
 
 def create_chatbot_chain():
+    model_name = "kalisai/Nusantara-0.8b-Indo-Chat"
+    # model_name = "kalisai/Nusantara-1.8b-Indo-Chat"
     pipe = pipeline(
         "text-generation",
-        # model="kalisai/Nusantara-0.8b-Indo-Chat",
-        model="kalisai/Nusantara-1.8b-Indo-Chat",
+        model=model_name,
         max_new_tokens=256,
         do_sample=True,
         temperature=0.2,
         top_p=0.3,
         repetition_penalty=1.1,
+        device_map="auto",
     )
     hf = HuggingFacePipeline(pipeline=pipe)
     chat_model = ChatHuggingFace(llm=hf).bind(skip_prompt=True)

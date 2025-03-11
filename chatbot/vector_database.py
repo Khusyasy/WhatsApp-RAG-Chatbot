@@ -23,7 +23,7 @@ if not os.path.exists(DATA_DIR):
 
 def create_vector_database():
     embeddings = HuggingFaceEmbeddings(
-        model_name="firqaaa/indo-sentence-bert-base",
+        model_name="intfloat/multilingual-e5-small",
         # model_kwargs={"device": "cuda"},  # setting to use GPU
     )
 
@@ -62,13 +62,20 @@ def create_vector_database():
 
         # recursive text splitter
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=250,
-            chunk_overlap=50,
-            separators=["|\n", "  \n", "\n\n"],
+            chunk_size=800,
+            chunk_overlap=150,
+            separators=["\n\n", "\n", ". ", ", ", " ", ""],
+            length_function=len,
+            is_separator_regex=False,
         )
         rec_splits = text_splitter.split_documents(md_splits)
 
         splits = rec_splits
+
+        # https://huggingface.co/intfloat/multilingual-e5-small#support-for-sentence-transformers
+        # buat intfloat/multilingual-e5-small tambahain "passage: " di depan text
+        for split in splits:
+            split.page_content = "passage: " + split.page_content
 
         # buat debugging aja
         with open("debug.txt", "w+", encoding="utf-8", errors="ignore") as d:
@@ -86,7 +93,7 @@ def create_vector_database():
 
     retriever = vectordb.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 7},
+        search_kwargs={"k": 5},
     )
     return retriever
 
